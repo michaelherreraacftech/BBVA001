@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Pruebas - API Enqueue 36 Usuarios (FAIL CRÍTICO)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Variables CSS para fácil personalización */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --critical-color: #8b0000;
+            --warning-color: #f9ca24;
+            --info-color: #4ecdc4;
+            --purple-color: #9b59b6;
+            --memory-color: #ff6b6b;
+            --background-light: #f5f5f5;
+            --text-dark: #2c3e50;
+            --border-light: #ddd;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --border-radius: 6px;
+            --font-size-base: 12px;
+            --font-size-large: 16px;
+            --font-size-small: 10px;
+        }
+
+        /* Reset y base */
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Aptos', 'Segoe UI', sans-serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 10px;
+            background: var(--background-light);
+            font-size: var(--font-size-base);
+        }
+
+        /* Layout principal */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Componentes reutilizables */
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+
+        /* Tipografía */
+        h1 {
+            color: var(--text-dark);
+            text-align: center;
+            border-bottom: 3px solid var(--critical-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin: 20px 0 10px 0;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 12px;
+            font-size: var(--font-size-large);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        /* Navegación */
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52,152,219,0.3);
+        }
+
+        .back-btn.danger {
+            background: linear-gradient(135deg, var(--critical-color), #a0000a);
+        }
+
+        /* Info del documento */
+        .doc-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--critical-color);
+        }
+
+        /* Resumen de prueba */
+        .test-summary {
+            background: linear-gradient(135deg, var(--critical-color), #a0000a);
+            color: white;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+
+        .result-badge {
+            background: var(--critical-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            min-width: 80px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+
+        /* Tablas */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: var(--font-size-small);
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--border-light);
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            font-weight: bold;
+        }
+
+        .results-table tr:nth-child(even) { background: #f9f9f9; }
+
+        .fail-critical {
+            background: var(--critical-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        /* Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 150px;
+            gap: 10px;
+            margin: 15px 0;
+            align-items: center;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #ffb3b3, #ff6666);
+            color: var(--text-dark);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .metric-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        /* Gráficas */
+        .chart-container { 
+            margin: 15px 0; 
+            width: 100%;
+            min-height: 300px;
+        }
+        
+        .chart-box {
+            background: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            height: 300px !important;
+            position: relative;
+            width: 100%;
+            min-width: 300px;
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .chart-title {
+            text-align: center;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 11px;
+            height: 20px;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            height: 200px !important;
+            width: 150px;
+            position: relative;
+        }
+
+        .pie-chart-container canvas {
+            width: 120px !important;
+            height: 120px !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .pie-chart-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        /* Leyenda */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: var(--font-size-small);
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 2px;
+        }
+
+        /* Servidores */
+        .server {
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .server h4 { margin-top: 0; font-size: 13px; }
+        .server ul { font-size: var(--font-size-small); margin: 0; padding-left: 15px; }
+
+        /* Notas */
+        .note {
+            background: #f5c6cb;
+            border: 1px solid var(--critical-color);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            font-size: 11px;
+            color: var(--critical-color);
+            font-weight: bold;
+        }
+
+        /* Header PDF (oculto por defecto) */
+        .pdf-header {
+            display: none;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #1a237e;
+        }
+
+        .pdf-header img {
+            width: 90%;
+            max-width: 1000px;
+            height: auto;
+            max-height: 150px;
+            object-fit: contain;
+            margin: 10px auto 15px auto;
+            display: block;
+        }
+
+        /* Estilos de impresión */
+        @media print {
+            :root { --font-size-base: 10px; --font-size-small: 9px; }
+            
+            .nav-header { display: none !important; }
+            .pdf-header { display: block !important; }
+            
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 15px !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .container {
+                box-shadow: none !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .chart-box {
+                height: 180px !important;
+                page-break-inside: avoid !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .chart-box canvas {
+                max-height: 150px !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+            
+            .chart-container,
+            .results-table,
+            .metrics-grid,
+            .arch-info {
+                page-break-inside: avoid !important;
+                margin: 10px 0 !important;
+            }
+            
+            h1, h2, h3 { page-break-after: avoid !important; }
+            
+            @page { margin: 0.3in; size: A4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header PDF (solo visible al imprimir) -->
+        <div class="pdf-header">
+            <img src="https://github.com/michaelherreraacftech/TESTBBVA002/raw/main/assets/images/header-acfv2.png" alt="ACF Technologies">
+        </div>
+
+        <!-- Navegación -->
+        <div class="nav-header">
+            <button class="back-btn" onclick="goBack()">
+                <span>←</span><span>Regresar</span>
+            </button>
+            <div class="page-title">Reporte de Performance - 36 Usuarios Concurrentes (FAIL CRÍTICO)</div>
+            <button class="back-btn danger" onclick="downloadPDF()">
+                <span>📄</span><span>Descargar PDF</span>
+            </button>
+        </div>
+
+        <!-- Información del documento -->
+        <div class="doc-info grid-2">
+            <div><strong>Fecha:</strong> 5 de Junio, 2025</div>
+            <div><strong>Entorno:</strong> QA-DESA</div>
+            <div><strong>Cliente:</strong> BBVA Mex</div>
+            <div><strong>API:</strong> Enqueue v2.2.1</div>
+            <div><strong>Analista:</strong> Michael J Herrera B</div>
+            <div><strong>Cargo:</strong> Líder de QA</div>
+        </div>
+
+        <!-- Título principal -->
+        <h1>Análisis de Capacidad API Enqueue - 36 Usuarios Concurrentes</h1>
+        <p class="subtitle">
+            Evaluación de Límites del Sistema: 20 Minutos de Prueba Intensiva<br>
+            <strong>API Enqueue BBVA v2.2.1 - Prueba de Saturación</strong>
+        </p>
+
+        <!-- Resumen de la prueba -->
+        <div class="test-summary flex-between">
+            <div>
+                <h3>Prueba TESTBBVA002 - Performance 36 Usuarios Concurrentes</h3>
+                <p><strong>Duración:</strong> 20 minutos | <strong>Arquitectura:</strong> API REST + Load Balancer + SQL Server</p>
+            </div>
+            <div class="result-badge">FAIL</div>
+        </div>
+
+        <!-- Especificaciones de infraestructura -->
+        <div class="card">
+            <h3>🔥 Especificaciones de Infraestructura QA-DESA</h3>
+            <div class="grid-3">
+                <div class="server">
+                    <h4 style="color: var(--critical-color)">API Server 1 (52.224.67.61)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> API Enqueue Principal</li>
+                        <li><strong>CPU:</strong> Uso constante ~41%</li>
+                        <li><strong>Memoria:</strong> Estable ~41%</li>
+                        <li><strong>I/O Disco:</strong> Picos extremos hasta 30%</li>
+                        <li><strong>Estado:</strong> Saturación crítica</li>
+                    </ul>
+                </div>
+                <div class="server">
+                    <h4 style="color: var(--critical-color)">API Server 2 (52.224.66.32)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> API Enqueue Secundaria</li>
+                        <li><strong>CPU:</strong> Descendente 36% → 33%</li>
+                        <li><strong>Memoria:</strong> Variable ~33-36%</li>
+                        <li><strong>I/O Disco:</strong> Intermitente hasta 15%</li>
+                        <li><strong>Estado:</strong> Degradación progresiva</li>
+                    </ul>
+                </div>
+                <div class="server">
+                    <h4 style="color: var(--critical-color)">SQL Server (52.186.11.140)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> Base de Datos Principal</li>
+                        <li><strong>CPU:</strong> Descendente 90% → 50%</li>
+                        <li><strong>Memoria:</strong> Estable ~85%</li>
+                        <li><strong>I/O Disco:</strong> Picos críticos 240%+</li>
+                        <li><strong>Estado:</strong> Colapso progresivo</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="note">
+                <strong>ALERTA CRÍTICA:</strong> Sistema en colapso total con <strong>64.67% de errores</strong>. La infraestructura actual NO soporta 36 usuarios concurrentes. <strong>PROHIBIDO usar en producción.</strong>
+            </div>
+        </div>
+
+        <!-- Resultados consolidados -->
+        <h2>Resultados Consolidados</h2>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Prueba</th><th>Concurrencia</th><th>Duración</th><th>Muestras</th><th>Promedio (ms)</th>
+                    <th>Mediana (ms)</th><th>90% Line</th><th>95% Line</th><th>99% Line</th>
+                    <th>Min (ms)</th><th>Max (ms)</th><th>Error %</th><th>Throughput</th><th>Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>TESTBBVA002</strong></td>
+                    <td>36 usuarios</td>
+                    <td>20 min</td>
+                    <td>38,021</td>
+                    <td>1130ms</td>
+                    <td>1111ms</td>
+                    <td>1525ms</td>
+                    <td>1649ms</td>
+                    <td>1898ms</td>
+                    <td>239ms</td>
+                    <td>19784ms</td>
+                    <td>64.67%</td>
+                    <td>31.7/sec</td>
+                    <td><span class="fail-critical">FAIL</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Métricas clave -->
+        <h2>Métricas Clave</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">31.7</div>
+                <div class="metric-label">Transacciones/seg</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">64.67%</div>
+                <div class="metric-label">Tasa de Error</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">1130ms</div>
+                <div class="metric-label">Tiempo Promedio</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">19784ms</div>
+                <div class="metric-label">Máximo</div>
+            </div>
+            <div class="pie-chart-container">
+                <div class="pie-chart-title">Resultado</div>
+                <canvas id="pieChart" width="100" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- Leyenda de colores -->
+        <h2>Rendimiento de Infraestructura</h2>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--error-color)"></div>
+                <span>CPU</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--purple-color)"></div>
+                <span>Disco I/O</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--primary-color)"></div>
+                <span>Memoria</span>
+            </div>
+        </div>
+
+        <!-- Gráficas de servidores API -->
+        <h3>Servidores API (20 minutos) - Degradación Progresiva</h3>
+        <div class="chart-container grid-2">
+            <div class="chart-box">
+                <div class="chart-title">API Server 1 (52.224.67.61) - Saturado</div>
+                <canvas id="api1"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">API Server 2 (52.224.66.32) - Degradación</div>
+                <canvas id="api2"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfica SQL Server -->
+        <h3>SQL Server (20 minutos) - Colapso Progresivo</h3>
+        <div class="chart-container">
+            <div class="chart-box">
+                <div class="chart-title">SQL Server (52.186.11.140) - Falla Crítica del Sistema</div>
+                <canvas id="sqlserver"></canvas>
+            </div>
+        </div>
+
+        <!-- Análisis de rendimiento -->
+        <h2>Análisis de Rendimiento</h2>
+        <div class="card">
+            <h4>🚨 Observaciones Críticas:</h4>
+            <ul>
+                <li><strong>COLAPSO TOTAL:</strong> 64.67% de errores indica falla sistémica completa</li>
+                <li><strong>Infraestructura Insuficiente:</strong> 36 usuarios superan completamente la capacidad del sistema</li>
+                <li><strong>Tiempos Inaceptables:</strong> 1.13 segundos promedio, máximo de 19.8 segundos</li>
+                <li><strong>API Server 1:</strong> Saturación constante, sin capacidad de recuperación</li>
+                <li><strong>API Server 2:</strong> Degradación progresiva de CPU 36% → 33%</li>
+                <li><strong>SQL Server COLAPSO:</strong> CPU descendente 90% → 50% indica desconexiones masivas</li>
+                <li><strong>I/O Crítico:</strong> Picos de 240%+ en disco causan timeouts sistemáticos</li>
+                <li><strong>Patrón de Falla:</strong> Sistema no puede mantener conectividad estable</li>
+                <li><strong>Escalamiento Urgente:</strong> Requiere infraestructura 3x más potente mínimo</li>
+                <li><strong>PROHIBICIÓN PRODUCCIÓN:</strong> Bajo ninguna circunstancia usar con más de 12 usuarios</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log('=== INICIANDO REPORTE CRÍTICO 36 USUARIOS ===');
+
+        let graficasCreadas = false;
+
+        function inicializarGraficas() {
+            if (typeof Chart === 'undefined') {
+                console.log('Chart.js no disponible, reintentando...');
+                setTimeout(inicializarGraficas, 500);
+                return;
+            }
+
+            if (graficasCreadas) {
+                console.log('Gráficas ya creadas, evitando duplicados');
+                return;
+            }
+
+            console.log('Creando gráficas para 36 usuarios...');
+            graficasCreadas = true;
+
+            const tiempos = ['0min', '2min', '4min', '6min', '8min', '10min', '12min', '14min', '16min', '18min', '20min'];
+
+            // PIE CHART
+            try {
+                const pieCanvas = document.getElementById('pieChart');
+                if (pieCanvas) {
+                    new Chart(pieCanvas, {
+                        type: 'pie',
+                        data: {
+                            labels: ['FAIL (64.67%)', 'PASS (35.33%)'],
+                            datasets: [{
+                                data: [64.67, 35.33],
+                                backgroundColor: ['#8b0000', '#cccccc'],
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    console.log('✅ Pie chart creado');
+                }
+            } catch (e) {
+                console.error('Error pie chart:', e);
+            }
+
+            // API SERVER 1
+            try {
+                const api1Canvas = document.getElementById('api1');
+                if (api1Canvas) {
+                    new Chart(api1Canvas, {
+                        type: 'line',
+                        data: {
+                            labels: tiempos,
+                            datasets: [
+                                {
+                                    label: 'CPU',
+                                    data: [41, 41, 44, 41, 41, 41, 41, 41, 41, 41, 41],
+                                    borderColor: '#e74c3c',
+                                    backgroundColor: 'rgba(231,76,60,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Memoria',
+                                    data: [41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41],
+                                    borderColor: '#3498db',
+                                    backgroundColor: 'rgba(52,152,219,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Disco I/O',
+                                    data: [12, 14, 30, 10, 12, 16, 13, 17, 18, 14, 13],
+                                    borderColor: '#9b59b6',
+                                    backgroundColor: 'rgba(155,89,182,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+                    console.log('✅ API1 chart creado');
+                }
+            } catch (e) {
+                console.error('Error API1 chart:', e);
+            }
+
+            // API SERVER 2
+            try {
+                const api2Canvas = document.getElementById('api2');
+                if (api2Canvas) {
+                    new Chart(api2Canvas, {
+                        type: 'line',
+                        data: {
+                            labels: tiempos,
+                            datasets: [
+                                {
+                                    label: 'CPU',
+                                    data: [36, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33],
+                                    borderColor: '#e74c3c',
+                                    backgroundColor: 'rgba(231,76,60,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Memoria',
+                                    data: [36, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33],
+                                    borderColor: '#3498db',
+                                    backgroundColor: 'rgba(52,152,219,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Disco I/O',
+                                    data: [15, 8, 11, 12, 8, 12, 10, 11, 8, 9, 10],
+                                    borderColor: '#9b59b6',
+                                    backgroundColor: 'rgba(155,89,182,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+                    console.log('✅ API2 chart creado');
+                }
+            } catch (e) {
+                console.error('Error API2 chart:', e);
+            }
+
+            // SQL SERVER
+            try {
+                const sqlCanvas = document.getElementById('sqlserver');
+                if (sqlCanvas) {
+                    new Chart(sqlCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: tiempos,
+                            datasets: [
+                                {
+                                    label: 'CPU',
+                                    data: [90, 85, 80, 75, 70, 65, 60, 58, 55, 52, 50],
+                                    borderColor: '#e74c3c',
+                                    backgroundColor: 'rgba(231,76,60,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Memoria',
+                                    data: [85, 85, 86, 85, 85, 86, 85, 85, 86, 85, 85],
+                                    borderColor: '#3498db',
+                                    backgroundColor: 'rgba(52,152,219,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Disco I/O',
+                                    data: [120, 160, 240, 180, 200, 190, 210, 150, 230, 140, 170],
+                                    borderColor: '#9b59b6',
+                                    backgroundColor: 'rgba(155,89,182,0.1)',
+                                    tension: 0.4,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 300
+                                }
+                            }
+                        }
+                    });
+                    console.log('✅ SQL Server chart creado');
+                }
+            } catch (e) {
+                console.error('Error SQL chart:', e);
+            }
+
+            console.log('=== TODAS LAS GRÁFICAS CREADAS ===');
+        }
+
+        // Inicialización única
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarGraficas);
+        } else {
+            inicializarGraficas();
+        }
+
+        // Funciones de navegación
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') goBack();
+        });
+
+        function downloadPDF() {
+            const originalTitle = document.title;
+            const timestamp = new Date().toISOString().split('T')[0];
+            document.title = `Reporte_BBVA_TESTBBVA002_36_Usuarios_FAIL_CRITICO_${timestamp}`;
+            
+            document.querySelectorAll('.nav-header').forEach(el => el.style.display = 'none');
+            
+            const originalStyles = {
+                fontSize: document.body.style.fontSize,
+                background: document.body.style.background,
+                margin: document.body.style.margin,
+                padding: document.body.style.padding
+            };
+            
+            Object.assign(document.body.style, {
+                fontSize: '10px',
+                background: 'white',
+                margin: '0',
+                padding: '15px'
+            });
+            
+            const printStyle = document.createElement('style');
+            printStyle.innerHTML = `
+                @media print {
+                    @page { margin: 0.3in; size: A4; }
+                    .nav-header { display: none !important; }
+                    body { -webkit-print-color-adjust: exact !important; }
+                    .chart-box { height: 180px !important; page-break-inside: avoid !important; }
+                    .chart-container { page-break-inside: avoid !important; }
+                }
+            `;
+            document.head.appendChild(printStyle);
+            
+            function restoreStyles() {
+                document.title = originalTitle;
+                Object.assign(document.body.style, originalStyles);
+                document.querySelectorAll('.nav-header').forEach(el => el.style.display = '');
+                document.head.removeChild(printStyle);
+            }
+            
+            setTimeout(() => {
+                window.print();
+                setTimeout(restoreStyles, 1500);
+            }, 300);
+        }
+    </script>
+</body>
+</html>

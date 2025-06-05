@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Pruebas - API Enqueue BBVA (FAIL)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Variables CSS para fácil personalización */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --warning-color: #f9ca24;
+            --info-color: #4ecdc4;
+            --purple-color: #9b59b6;
+            --memory-color: #ff6b6b;
+            --background-light: #f5f5f5;
+            --text-dark: #2c3e50;
+            --border-light: #ddd;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --border-radius: 6px;
+            --font-size-base: 12px;
+            --font-size-large: 16px;
+            --font-size-small: 10px;
+        }
+
+        /* Reset y base */
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Aptos', 'Segoe UI', sans-serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 10px;
+            background: var(--background-light);
+            font-size: var(--font-size-base);
+        }
+
+        /* Layout principal */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Componentes reutilizables */
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--secondary-color), #34495e);
+            color: white;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+
+        /* Tipografía */
+        h1 {
+            color: var(--text-dark);
+            text-align: center;
+            border-bottom: 3px solid var(--error-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin: 20px 0 10px 0;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 12px;
+            font-size: var(--font-size-large);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        /* Navegación */
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52,152,219,0.3);
+        }
+
+        .back-btn.danger {
+            background: linear-gradient(135deg, var(--error-color), #c0392b);
+        }
+
+        /* Info del documento */
+        .doc-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border-left: 4px solid #1a237e;
+        }
+
+        /* Resumen de prueba */
+        .test-summary {
+            background: linear-gradient(135deg, var(--error-color), #c0392b);
+            color: white;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+
+        .result-badge {
+            background: var(--error-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            min-width: 80px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+
+        /* Tablas */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: var(--font-size-small);
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--border-light);
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            font-weight: bold;
+        }
+
+        .results-table tr:nth-child(even) { background: #f9f9f9; }
+
+        .fail {
+            background: var(--error-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        /* Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 150px;
+            gap: 10px;
+            margin: 15px 0;
+            align-items: center;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #ffcccb, #ffa8a8);
+            color: var(--text-dark);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .metric-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        /* Gráficas - FORZAR VISIBILIDAD */
+        .chart-container { 
+            margin: 15px 0; 
+            width: 100%;
+            min-height: 300px;
+        }
+        
+        .chart-box {
+            background: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            height: 300px !important;
+            position: relative;
+            width: 100%;
+            min-width: 300px;
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .chart-title {
+            text-align: center;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 11px;
+            height: 20px;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            height: 200px !important;
+            width: 150px;
+            position: relative;
+        }
+
+        .pie-chart-container canvas {
+            width: 120px !important;
+            height: 120px !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .pie-chart-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        /* Leyenda */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: var(--font-size-small);
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 2px;
+        }
+
+        /* Servidores */
+        .server {
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .server h4 { margin-top: 0; font-size: 13px; }
+        .server ul { font-size: var(--font-size-small); margin: 0; padding-left: 15px; }
+
+        /* Notas */
+        .note {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            font-size: 11px;
+            color: #721c24;
+        }
+
+        /* Header PDF (oculto por defecto) */
+        .pdf-header {
+            display: none;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #1a237e;
+        }
+
+        .pdf-header img {
+            width: 90%;
+            max-width: 1000px;
+            height: auto;
+            max-height: 150px;
+            object-fit: contain;
+            margin: 10px auto 15px auto;
+            display: block;
+        }
+
+        /* Estilos de impresión */
+        @media print {
+            :root { --font-size-base: 10px; --font-size-small: 9px; }
+            
+            .nav-header { display: none !important; }
+            .pdf-header { display: block !important; }
+            
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 15px !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .container {
+                box-shadow: none !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .chart-box {
+                height: 180px !important;
+                page-break-inside: avoid !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .chart-box canvas {
+                max-height: 150px !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+            
+            .chart-container,
+            .results-table,
+            .metrics-grid,
+            .arch-info {
+                page-break-inside: avoid !important;
+                margin: 10px 0 !important;
+            }
+            
+            h1, h2, h3 { page-break-after: avoid !important; }
+            
+            @page { margin: 0.3in; size: A4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header PDF (solo visible al imprimir) -->
+        <div class="pdf-header">
+            <img src="https://github.com/michaelherreraacftech/TESTBBVA002/raw/main/assets/images/header-acfv2.png" alt="ACF Technologies">
+        </div>
+
+        <!-- Navegación -->
+        <div class="nav-header">
+            <button class="back-btn" onclick="goBack()">
+                <span>←</span><span>Regresar</span>
+            </button>
+            <div class="page-title">Reporte de Performance - API Enqueue BBVA v2.2.1 (FAIL)</div>
+            <button class="back-btn danger" onclick="downloadPDF()">
+                <span>📄</span><span>Descargar PDF</span>
+            </button>
+        </div>
+
+        <!-- Información del documento -->
+        <div class="doc-info grid-2">
+            <div><strong>Fecha:</strong> 5 de Junio, 2025</div>
+            <div><strong>Entorno:</strong> QA-DESA</div>
+            <div><strong>Cliente:</strong> BBVA Mex</div>
+            <div><strong>API:</strong> Enqueue v2.2.1</div>
+            <div><strong>Analista:</strong> Michael J Herrera B</div>
+            <div><strong>Cargo:</strong> Líder de QA</div>
+        </div>
+
+        <!-- Título principal -->
+        <h1>Análisis de Capacidad API Enqueue - Entorno QA-DESA</h1>
+        <p class="subtitle">
+            Evaluación Completa de Rendimiento: 20 Minutos de Prueba<br>
+            <strong>API Enqueue BBVA v2.2.1 - Prueba de Estrés</strong>
+        </p>
+
+        <!-- Resumen de la prueba -->
+        <div class="test-summary flex-between">
+            <div>
+                <h3>Prueba TESTBBVA001 - Performance API Enqueue (Alta Carga)</h3>
+                <p><strong>Duración:</strong> 20 minutos | <strong>Arquitectura:</strong> API REST + Load Balancer + SQL Server</p>
+            </div>
+            <div class="result-badge">FAIL</div>
+        </div>
+
+        <!-- Especificaciones de infraestructura -->
+        <div class="card">
+            <h3>⚠️ Especificaciones de Infraestructura QA-DESA</h3>
+            <div class="grid-3">
+                <div class="server">
+                    <h4 style="color: var(--error-color)">API Server 1 (52.224.67.61)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> API Enqueue Principal</li>
+                        <li><strong>CPU:</strong> Uso constante ~41%</li>
+                        <li><strong>Memoria:</strong> Estable ~41%</li>
+                        <li><strong>I/O Disco:</strong> Picos intensivos hasta 30%</li>
+                        <li><strong>Estado:</strong> Sobrecargado</li>
+                    </ul>
+                </div>
+                <div class="server">
+                    <h4 style="color: var(--warning-color)">API Server 2 (52.224.66.32)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> API Enqueue Secundaria</li>
+                        <li><strong>CPU:</strong> Uso elevado ~34%</li>
+                        <li><strong>Memoria:</strong> Estable ~34%</li>
+                        <li><strong>I/O Disco:</strong> Picos hasta 30%</li>
+                        <li><strong>Estado:</strong> Alta carga</li>
+                    </ul>
+                </div>
+                <div class="server">
+                    <h4 style="color: var(--error-color)">SQL Server (52.186.11.140)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> Base de Datos Principal</li>
+                        <li><strong>CPU:</strong> Variable 40-100%</li>
+                        <li><strong>Memoria:</strong> Estable ~85%</li>
+                        <li><strong>I/O Disco:</strong> Crítico 250%+</li>
+                        <li><strong>Estado:</strong> Saturado</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="note">
+                <strong>CRÍTICO:</strong> Prueba ejecutada durante <strong>20 minutos continuos</strong> con carga sostenida. Sistema muestra signos de saturación y <strong>17.02% de errores superan el límite del 3%</strong>.
+            </div>
+        </div>
+
+        <!-- Resultados consolidados -->
+        <h2>Resultados Consolidados</h2>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Prueba</th><th>Duración</th><th>Muestras</th><th>Promedio (ms)</th>
+                    <th>Mediana (ms)</th><th>90% Line</th><th>95% Line</th><th>99% Line</th>
+                    <th>Min (ms)</th><th>Max (ms)</th><th>Error %</th><th>Throughput</th><th>Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>TESTBBVA001</strong></td>
+                    <td>20 min</td>
+                    <td>36,326</td>
+                    <td>790ms</td>
+                    <td>769ms</td>
+                    <td>1076ms</td>
+                    <td>1163ms</td>
+                    <td>1328ms</td>
+                    <td>266ms</td>
+                    <td>4535ms</td>
+                    <td>17.02%</td>
+                    <td>30.2/sec</td>
+                    <td><span class="fail">FAIL</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Métricas clave -->
+        <h2>Métricas Clave</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">30.2</div>
+                <div class="metric-label">Transacciones/seg</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">17.02%</div>
+                <div class="metric-label">Tasa de Error</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">790ms</div>
+                <div class="metric-label">Tiempo Promedio</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">4535ms</div>
+                <div class="metric-label">Máximo</div>
+            </div>
+            <div class="pie-chart-container">
+                <div class="pie-chart-title">Resultado</div>
+                <canvas id="pieChart" width="100" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- Leyenda de colores -->
+        <h2>Rendimiento de Infraestructura</h2>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--error-color)"></div>
+                <span>CPU</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--purple-color)"></div>
+                <span>Disco I/O</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--primary-color)"></div>
+                <span>Memoria</span>
+            </div>
+        </div>
+
+        <!-- Gráficas de servidores API -->
+        <h3>Servidores API (20 minutos)</h3>
+        <div class="chart-container grid-2">
+            <div class="chart-box">
+                <div class="chart-title">API Server 1 (52.224.67.61)</div>
+                <canvas id="api1"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">API Server 2 (52.224.66.32)</div>
+                <canvas id="api2"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfica SQL Server -->
+        <h3>SQL Server (20 minutos)</h3>
+        <div class="chart-container">
+            <div class="chart-box">
+                <div class="chart-title">SQL Server (52.186.11.140) - Rendimiento Crítico</div>
+                <canvas id="sqlserver"></canvas>
+            </div>
+        </div>
+
+        <!-- Análisis de rendimiento -->
+        <h2>Análisis de Rendimiento</h2>
+        <div class="card">
+            <h4>🚨 Observaciones Críticas:</h4>
+            <ul>
+                <li><strong>FALLA CRÍTICA:</strong> 17.02% de errores supera significativamente el límite del 3%</li>
+                <li><strong>Sistema Saturado:</strong> 30.2 TPS con alta tasa de errores indica límite de capacidad</li>
+                <li><strong>Tiempos Elevados:</strong> 790ms promedio y máximo de 4.5 segundos muestran degradación</li>
+                <li><strong>API Server 1:</strong> CPU constante 41%, alta actividad de I/O sostenida</li>
+                <li><strong>API Server 2:</strong> CPU 34%, distribución de carga pero con stress visible</li>
+                <li><strong>SQL Server CRÍTICO:</strong> I/O saturado con picos de 250%+, cuellos de botella severos</li>
+                <li><strong>Memoria SQL:</strong> 85% de uso sostenido, cerca del límite</li>
+                <li><strong>Patrón de Errores:</strong> Distribución errática indica inestabilidad del sistema</li>
+                <li><strong>Capacidad Excedida:</strong> Sistema operando fuera de límites operacionales</li>
+                <li><strong>Recomendación:</strong> Reducir carga o escalar infraestructura antes de producción</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Diagnóstico y inicialización de gráficas
+        console.log('=== REPORTE FAIL - API ENQUEUE ===');
+        console.log('Inicializando gráficas para prueba FAIL...');
+
+        function crearGraficasFail() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js NO está disponible');
+                setTimeout(crearGraficasFail, 500);
+                return;
+            }
+
+            console.log('Chart.js disponible, creando gráficas FAIL...');
+
+            // Datos basados en las imágenes - Prueba FAIL con alta carga
+            const labels = ['0min', '2min', '4min', '6min', '8min', '10min', '12min', '14min', '16min', '18min', '20min'];
+
+            // 1. PIE CHART - FAIL
+            try {
+                const pieCanvas = document.getElementById('pieChart');
+                if (pieCanvas) {
+                    console.log('Creando pie chart FAIL...');
+                    const pieChart = new Chart(pieCanvas, {
+                        type: 'pie',
+                        data: {
+                            labels: ['FAIL (17.02%)', 'PASS (82.98%)'],
+                            datasets: [{
+                                data: [17.02, 82.98],
+                                backgroundColor: ['#e74c3c', '#95a5a6']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            devicePixelRatio: 2
+                        }
+                    });
+                    console.log('✅ Pie chart FAIL creado exitosamente');
+                } else {
+                    console.error('❌ Canvas pieChart no encontrado');
+                }
+            } catch (error) {
+                console.error('❌ Error creando pie chart FAIL:', error);
+            }
+
+            // 2. API SERVER 1 - Alta carga sostenida
+            try {
+                const api1Canvas = document.getElementById('api1');
+                if (api1Canvas) {
+                    console.log('Creando API1 chart FAIL...');
+                    const api1Chart = new Chart(api1Canvas, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'CPU',
+                                    data: [41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41],
+                                    borderColor: '#e74c3c',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Memoria',
+                                    data: [41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41],
+                                    borderColor: '#3498db',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Disco I/O',
+                                    data: [8, 15, 10, 12, 30, 8, 20, 15, 25, 28, 18],
+                                    borderColor: '#9b59b6',
+                                    tension: 0.4,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            devicePixelRatio: 2,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                    console.log('✅ API1 chart FAIL creado exitosamente');
+                } else {
+                    console.error('❌ Canvas api1 no encontrado');
+                }
+            } catch (error) {
+                console.error('❌ Error creando API1 chart FAIL:', error);
+            }
+
+            // 3. API SERVER 2 - Carga distribuida pero alta
+            try {
+                const api2Canvas = document.getElementById('api2');
+                if (api2Canvas) {
+                    console.log('Creando API2 chart FAIL...');
+                    const api2Chart = new Chart(api2Canvas, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'CPU',
+                                    data: [34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34],
+                                    borderColor: '#e74c3c',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Memoria',
+                                    data: [34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34],
+                                    borderColor: '#3498db',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Disco I/O',
+                                    data: [5, 10, 8, 30, 12, 15, 8, 31, 12, 8, 10],
+                                    borderColor: '#9b59b6',
+                                    tension: 0.4,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            devicePixelRatio: 2,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                    console.log('✅ API2 chart FAIL creado exitosamente');
+                } else {
+                    console.error('❌ Canvas api2 no encontrado');
+                }
+            } catch (error) {
+                console.error('❌ Error creando API2 chart FAIL:', error);
+            }
+
+            // 4. SQL SERVER - CRÍTICO con I/O saturado
+            try {
+                const sqlCanvas = document.getElementById('sqlserver');
+                if (sqlCanvas) {
+                    console.log('Creando SQL Server chart FAIL...');
+                    const sqlChart = new Chart(sqlCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'CPU',
+                                    data: [60, 85, 70, 95, 80, 90, 75, 100, 85, 70, 65],
+                                    borderColor: '#e74c3c',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Memoria',
+                                    data: [85, 85, 86, 85, 85, 86, 85, 85, 86, 85, 85],
+                                    borderColor: '#3498db',
+                                    tension: 0.4,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Disco I/O',
+                                    data: [80, 180, 230, 120, 250, 200, 160, 240, 210, 150, 190],
+                                    borderColor: '#9b59b6',
+                                    tension: 0.4,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            devicePixelRatio: 2,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 300
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                    console.log('✅ SQL Server chart FAIL creado exitosamente');
+                } else {
+                    console.error('❌ Canvas sqlserver no encontrado');
+                }
+            } catch (error) {
+                console.error('❌ Error creando SQL Server chart FAIL:', error);
+            }
+
+            console.log('=== PROCESO DE CREACIÓN FAIL COMPLETADO ===');
+            
+            // FORZAR REDIMENSIONAMIENTO
+            setTimeout(function() {
+                console.log('Forzando redimensionamiento de gráficas FAIL...');
+                window.dispatchEvent(new Event('resize'));
+                
+                // Verificar que los canvas sean visibles
+                const canvases = document.querySelectorAll('.chart-box canvas, .pie-chart-container canvas');
+                canvases.forEach((canvas, index) => {
+                    console.log(`Canvas FAIL ${index + 1}:`, {
+                        width: canvas.width,
+                        height: canvas.height,
+                        offsetWidth: canvas.offsetWidth,
+                        offsetHeight: canvas.offsetHeight,
+                        visible: canvas.offsetWidth > 0 && canvas.offsetHeight > 0
+                    });
+                });
+            }, 1000);
+        }
+
+        // Múltiples intentos de inicialización
+        console.log('Configurando eventos de inicialización FAIL...');
+
+        // Intento 1: DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOMContentLoaded disparado para FAIL');
+                setTimeout(crearGraficasFail, 100);
+            });
+        } else {
+            console.log('DOM ya está listo para FAIL');
+            setTimeout(crearGraficasFail, 100);
+        }
+
+        // Intento 2: window.load
+        window.addEventListener('load', function() {
+            console.log('Window load disparado para FAIL');
+            setTimeout(function() {
+                crearGraficasFail();
+            }, 500);
+        });
+
+        // Intento 3: Timeout manual
+        setTimeout(function() {
+            console.log('Timeout manual disparado para FAIL');
+            crearGraficasFail();
+        }, 2000);
+
+        // Funciones de utilidad
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') goBack();
+        });
+
+        function downloadPDF() {
+            const originalTitle = document.title;
+            const timestamp = new Date().toISOString().split('T')[0];
+            document.title = `Reporte_BBVA_TESTBBVA001_API_Enqueue_v2.2.1_FAIL_${timestamp}`;
+            
+            const navElements = document.querySelectorAll('.nav-header, header, nav');
+            navElements.forEach(el => el.style.display = 'none');
+            
+            const originalStyles = {
+                fontSize: document.body.style.fontSize,
+                background: document.body.style.background,
+                margin: document.body.style.margin,
+                padding: document.body.style.padding
+            };
+            
+            Object.assign(document.body.style, {
+                fontSize: '10px',
+                background: 'white',
+                margin: '0',
+                padding: '15px'
+            });
+            
+            const printStyle = document.createElement('style');
+            printStyle.innerHTML = `
+                @media print {
+                    @page { margin: 0.3in; size: A4; }
+                    .nav-header, header, nav { display: none !important; }
+                    body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+                    .chart-box { height: 180px !important; page-break-inside: avoid !important; }
+                    .chart-box canvas { max-height: 150px !important; max-width: 100% !important; width: 100% !important; height: auto !important; }
+                    .chart-container { page-break-inside: avoid !important; }
+                }
+            `;
+            document.head.appendChild(printStyle);
+            
+            function restoreStyles() {
+                document.title = originalTitle;
+                Object.assign(document.body.style, originalStyles);
+                navElements.forEach(el => el.style.display = '');
+                document.head.removeChild(printStyle);
+            }
+            
+            setTimeout(() => {
+                window.print();
+                setTimeout(restoreStyles, 1500);
+            }, 300);
+        }
+    </script>
+</body>
+</html>
+                

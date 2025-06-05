@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Pruebas - API Enqueue BBVA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Variables CSS para fácil personalización */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --warning-color: #f9ca24;
+            --info-color: #4ecdc4;
+            --purple-color: #9b59b6;
+            --memory-color: #ff6b6b;
+            --background-light: #f5f5f5;
+            --text-dark: #2c3e50;
+            --border-light: #ddd;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --border-radius: 6px;
+            --font-size-base: 12px;
+            --font-size-large: 16px;
+            --font-size-small: 10px;
+        }
+
+        /* Reset y base */
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Aptos', 'Segoe UI', sans-serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 10px;
+            background: var(--background-light);
+            font-size: var(--font-size-base);
+        }
+
+        /* Layout principal */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Componentes reutilizables */
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--secondary-color), #34495e);
+            color: white;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+
+        /* Tipografía */
+        h1 {
+            color: var(--text-dark);
+            text-align: center;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin: 20px 0 10px 0;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 12px;
+            font-size: var(--font-size-large);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        /* Navegación */
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52,152,219,0.3);
+        }
+
+        .back-btn.danger {
+            background: linear-gradient(135deg, var(--error-color), #c0392b);
+        }
+
+        /* Info del documento */
+        .doc-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border-left: 4px solid #1a237e;
+        }
+
+        /* Resumen de prueba */
+        .test-summary {
+            background: linear-gradient(135deg, var(--secondary-color), #34495e);
+            color: white;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+
+        .result-badge {
+            background: var(--success-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            min-width: 80px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+
+        /* Tablas */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: var(--font-size-small);
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--border-light);
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            font-weight: bold;
+        }
+
+        .results-table tr:nth-child(even) { background: #f9f9f9; }
+
+        .pass {
+            background: var(--success-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        /* Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 150px;
+            gap: 10px;
+            margin: 15px 0;
+            align-items: center;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #a8e6cf, #7fcdcd);
+            color: var(--text-dark);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .metric-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        /* Gráficas - FORZAR VISIBILIDAD */
+        .chart-container { 
+            margin: 15px 0; 
+            width: 100%;
+            min-height: 300px;
+        }
+        
+        .chart-box {
+            background: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            height: 300px !important;
+            position: relative;
+            width: 100%;
+            min-width: 300px;
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            height: 200px !important;
+            width: 150px;
+            position: relative;
+        }
+
+        .pie-chart-container canvas {
+            width: 120px !important;
+            height: 120px !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        /* Leyenda */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: var(--font-size-small);
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 2px;
+        }
+
+        /* Servidores */
+        .server {
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .server h4 { margin-top: 0; font-size: 13px; }
+        .server ul { font-size: var(--font-size-small); margin: 0; padding-left: 15px; }
+
+        /* Notas */
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            font-size: 11px;
+            color: #856404;
+        }
+
+        /* Header PDF (oculto por defecto) */
+        .pdf-header {
+            display: none;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #1a237e;
+        }
+
+        .pdf-header img {
+            width: 90%;
+            max-width: 1000px;
+            height: auto;
+            max-height: 150px;
+            object-fit: contain;
+            margin: 10px auto 15px auto;
+            display: block;
+        }
+
+        /* Estilos de impresión */
+        @media print {
+            :root { --font-size-base: 10px; --font-size-small: 9px; }
+            
+            .nav-header { display: none !important; }
+            .pdf-header { display: block !important; }
+            
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 15px !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .container {
+                box-shadow: none !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .chart-box {
+                height: 180px !important;
+                page-break-inside: avoid !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .chart-box canvas {
+                max-height: 150px !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+            
+            .chart-container,
+            .results-table,
+            .metrics-grid,
+            .arch-info {
+                page-break-inside: avoid !important;
+                margin: 10px 0 !important;
+            }
+            
+            h1, h2, h3 { page-break-after: avoid !important; }
+            
+            @page { margin: 0.3in; size: A4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header PDF (solo visible al imprimir) -->
+        <div class="pdf-header">
+            <img src="https://github.com/michaelherreraacftech/TESTBBVA002/raw/main/assets/images/header-acfv2.png" alt="ACF Technologies">
+        </div>
+
+        <!-- Navegación -->
+        <div class="nav-header">
+            <button class="back-btn" onclick="goBack()">
+                <span>←</span><span>Regresar</span>
+            </button>
+            <div class="page-title">Reporte de Performance - API Enqueue BBVA v2.2.1 (PASS)</div>
+            <button class="back-btn danger" onclick="downloadPDF()">
+                <span>📄</span><span>Descargar PDF</span>
+            </button>
+        </div>
+
+        <!-- Información del documento -->
+        <div class="doc-info grid-2">
+            <div><strong>Fecha:</strong> 5 de Junio, 2025</div>
+            <div><strong>Entorno:</strong> QA-DESA</div>
+            <div><strong>Cliente:</strong> BBVA Mex</div>
+            <div><strong>API:</strong> Enqueue v2.2.1</div>
+            <div><strong>Analista:</strong> Michael J Herrera B</div>
+            <div><strong>Cargo:</strong> Líder de QA</div>
+        </div>
+
+        <!-- Título principal -->
+        <h1>Análisis de Capacidad API Enqueue - Entorno QA-DESA</h1>
+        <p class="subtitle">
+            Evaluación Completa de Rendimiento: 20 Minutos de Prueba<br>
+            <strong>API Enqueue BBVA v2.2.1</strong>
+        </p>
+
+        <!-- Resumen de la prueba -->
+        <div class="test-summary flex-between">
+            <div>
+                <h3>Prueba TESTBBVA001 - Performance API Enqueue</h3>
+                <p><strong>Duración:</strong> 20 minutos | <strong>Arquitectura:</strong> API REST + Load Balancer + SQL Server</p>
+            </div>
+            <div class="result-badge">PASS</div>
+        </div>
+
+        <!-- Especificaciones de infraestructura -->
+        <div class="card">
+            <h3>🔧 Especificaciones de Infraestructura QA-DESA</h3>
+            <div class="grid-3">
+                <div class="server">
+                    <h4 style="color: var(--error-color)">API Server 1 (52.224.67.61)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> API Enqueue Principal</li>
+                        <li><strong>CPU:</strong> Uso promedio 40-45%</li>
+                        <li><strong>Memoria:</strong> Estable ~40%</li>
+                        <li><strong>I/O Disco:</strong> Picos hasta 50%</li>
+                        <li><strong>Estado:</strong> Balanceado</li>
+                    </ul>
+                </div>
+                <div class="server">
+                    <h4 style="color: var(--success-color)">API Server 2 (52.224.66.32)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> API Enqueue Secundaria</li>
+                        <li><strong>CPU:</strong> Uso promedio 34-35%</li>
+                        <li><strong>Memoria:</strong> Estable ~34%</li>
+                        <li><strong>I/O Disco:</strong> Picos hasta 30%</li>
+                        <li><strong>Estado:</strong> Óptimo</li>
+                    </ul>
+                </div>
+                <div class="server">
+                    <h4 style="color: var(--primary-color)">SQL Server (52.186.11.140)</h4>
+                    <ul>
+                        <li><strong>Función:</strong> Base de Datos Principal</li>
+                        <li><strong>CPU:</strong> Actividad variable 20-80%</li>
+                        <li><strong>Memoria:</strong> Estable ~85%</li>
+                        <li><strong>I/O Disco:</strong> Picos intensivos 200%+</li>
+                        <li><strong>Estado:</strong> Alta carga controlada</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="note">
+                <strong>Nota:</strong> Prueba ejecutada durante <strong>20 minutos continuos</strong> con carga sostenida para evaluar estabilidad de la API Enqueue v2.2.1.
+            </div>
+        </div>
+
+        <!-- Resultados consolidados -->
+        <h2>Resultados Consolidados</h2>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Prueba</th><th>Duración</th><th>Muestras</th><th>Promedio (ms)</th>
+                    <th>Mediana (ms)</th><th>90% Line</th><th>95% Line</th><th>99% Line</th>
+                    <th>Min (ms)</th><th>Max (ms)</th><th>Error %</th><th>Throughput</th><th>Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>TESTBBVA001</strong></td>
+                    <td>20 min</td>
+                    <td>26,968</td>
+                    <td>532ms</td>
+                    <td>516ms</td>
+                    <td>718ms</td>
+                    <td>779ms</td>
+                    <td>887ms</td>
+                    <td>1ms</td>
+                    <td>3281ms</td>
+                    <td>0.15%</td>
+                    <td>22.5/sec</td>
+                    <td><span class="pass">PASS</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Métricas clave -->
+        <h2>Métricas Clave</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">22.5</div>
+                <div class="metric-label">Transacciones/seg</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">0.15%</div>
+                <div class="metric-label">Tasa de Error</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">532ms</div>
+                <div class="metric-label">Tiempo Promedio</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">3281ms</div>
+                <div class="metric-label">Máximo</div>
+            </div>
+            <div class="pie-chart-container">
+                <div class="pie-chart-title">Resultado</div>
+                <canvas id="pieChart" width="100" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- Leyenda de colores -->
+        <h2>Rendimiento de Infraestructura</h2>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--error-color)"></div>
+                <span>CPU</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--purple-color)"></div>
+                <span>Disco I/O</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--primary-color)"></div>
+                <span>Memoria</span>
+            </div>
+        </div>
+
+        <!-- Gráficas de servidores API -->
+        <h3>Servidores API (20 minutos)</h3>
+        <div class="chart-container grid-2">
+            <div class="chart-box">
+                <div class="chart-title">API Server 1 (52.224.67.61)</div>
+                <canvas id="api1"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">API Server 2 (52.224.66.32)</div>
+                <canvas id="api2"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfica SQL Server -->
+        <h3>SQL Server (20 minutos)</h3>
+        <div class="chart-container">
+            <div class="chart-box">
+                <div class="chart-title">SQL Server (52.186.11.140) - Rendimiento Completo</div>
+                <canvas id="sqlserver"></canvas>
+            </div>
+        </div>
+
+        <!-- Análisis de rendimiento -->
+        <h2>Análisis de Rendimiento</h2>
+        <div class="card">
+            <h4>Observaciones Clave:</h4>
+            <ul>
+                <li><strong>Excelente Estabilidad:</strong> 0.15% de errores, muy por debajo del límite del 3%</li>
+                <li><strong>Throughput Sólido:</strong> 22.5 transacciones por segundo sostenidas durante 20 minutos</li>
+                <li><strong>Tiempos de Respuesta Consistentes:</strong> Mediana de 516ms con 90% de requests bajo 718ms</li>
+                <li><strong>API Server 1:</strong> Carga balanceada con CPU estable 40-45%, algunos picos de I/O hasta 50%</li>
+                <li><strong>API Server 2:</strong> Rendimiento óptimo con CPU 34-35%, carga bien distribuida</li>
+                <li><strong>SQL Server:</strong> Alta actividad esperada, CPU variable 20-80%, memoria estable en 85%</li>
+                <li><strong>I/O Intensivo:</strong> SQL Server muestra picos de I/O hasta 200%+ indicando consultas complejas</li>
+                <li><strong>Balanceador Efectivo:</strong> Distribución adecuada de carga entre servidores API</li>
+                <li><strong>Capacidad de Escalamiento:</strong> Sistema muestra margen para carga adicional</li>
+                <li><strong>Versión API Estable:</strong> Enqueue v2.2.1 demuestra excelente rendimiento en prueba extendida</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de datos basada en las imágenes de Performance Monitor
+        const testData = {
+            // Datos de tiempo (20 minutos con intervalos de 2 minutos)
+            timeLabels: ['0:00', '2:00', '4:00', '6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+            
+            // API Server 1 (52.224.67.61) - basado en la imagen superior izquierda
+            api1: {
+                cpu: [40, 41, 40, 50, 41, 40, 41, 43, 41, 40, 41],
+                memory: [40, 40, 41, 40, 40, 41, 40, 40, 41, 40, 40],
+                diskIO: [5, 10, 30, 50, 15, 20, 15, 20, 25, 15, 10]
+            },
+            
+            // API Server 2 (52.224.66.32) - basado en la imagen superior derecha
+            api2: {
+                cpu: [34, 34, 34, 35, 34, 34, 35, 34, 34, 34, 34],
+                memory: [34, 34, 35, 34, 34, 35, 34, 34, 35, 34, 34],
+                diskIO: [5, 8, 15, 30, 10, 15, 8, 25, 12, 8, 10]
+            },
+            
+            // SQL Server (52.186.11.140) - basado en la imagen inferior
+            sql: {
+                cpu: [30, 45, 35, 50, 40, 60, 45, 75, 50, 35, 40],
+                memory: [85, 85, 86, 85, 85, 86, 85, 85, 86, 85, 85],
+                diskIO: [50, 120, 200, 150, 100, 80, 180, 210, 160, 90, 70]
+            },
+            
+            // Datos del pie chart
+            pieData: {
+                pass: 99.85,
+                fail: 0.15
+            }
+        };
+
+        // Configuración común de gráficas
+        const chartConfig = {
+            common: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 9 },
+                            boxWidth: 10,
+                            padding: 8
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Uso (%)', font: { size: 10 } },
+                        ticks: { font: { size: 9 } }
+                    },
+                    x: {
+                        title: { display: true, text: 'Tiempo (min)', font: { size: 10 } },
+                        ticks: { font: { size: 9 } }
+                    }
+                }
+            },
+            
+            pie: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            font: { size: 8 },
+                            boxWidth: 8,
+                            padding: 4,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            },
+            
+            sqlChart: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 9 },
+                            boxWidth: 10,
+                            padding: 8
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 250, // Para acomodar los picos de I/O
+                        title: { display: true, text: 'Uso (%)', font: { size: 10 } },
+                        ticks: { font: { size: 9 } }
+                    },
+                    x: {
+                        title: { display: true, text: 'Tiempo (min)', font: { size: 10 } },
+                        ticks: { font: { size: 9 } }
+                    }
+                }
+            }
+        };
+
+        // Colores consistentes
+        const colors = {
+            cpu: { border: '#e74c3c', bg: 'rgba(231,76,60,0.1)' },
+            memory: { border: '#3498db', bg: 'rgba(52,152,219,0.1)' },
+            diskIO: { border: '#9b59b6', bg: 'rgba(155,89,182,0.1)' },
+            success: '#2ecc71',
+            error: '#e74c3c'
+        };
+
+        // Función para crear gráficas de línea
+        function createLineChart(elementId, datasets, config = chartConfig.common) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                console.error(`Elemento ${elementId} no encontrado`);
+                return null;
+            }
+            
+            try {
+                const chart = new Chart(element, {
+                    type: 'line',
+                    data: {
+                        labels: testData.timeLabels,
+                        datasets: datasets.map(dataset => ({
+                            ...dataset,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointBackgroundColor: dataset.borderColor,
+                            pointBorderColor: dataset.borderColor,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }))
+                    },
+                    options: config
+                });
+                console.log(`Gráfica ${elementId} creada exitosamente`);
+                return chart;
+            } catch (e) {
+                console.error(`Error creating chart ${elementId}:`, e);
+                return null;
+            }
+        }
+
+        // Función para crear gráfica de pie
+        function createPieChart() {
+            const element = document.getElementById('pieChart');
+            if (!element) {
+                console.error('Elemento pieChart no encontrado');
+                return null;
+            }
+            
+            try {
+                const chart = new Chart(element, {
+                    type: 'pie',
+                    data: {
+                        labels: [`PASS (${testData.pieData.pass}%)`, `FAIL (${testData.pieData.fail}%)`],
+                        datasets: [{
+                            data: [testData.pieData.pass, testData.pieData.fail],
+                            backgroundColor: [colors.success, colors.error],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: chartConfig.pie
+                });
+                console.log('Gráfica pie creada exitosamente');
+                return chart;
+            } catch (e) {
+                console.error('Error creating pie chart:', e);
+                return null;
+            }
+        }
+
+        // Inicializar gráficas cuando se carga la página
+        window.addEventListener('load', function() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js no está cargado');
+                return;
+            }
+            
+            console.log('Inicializando gráficas...');
+            
+            // Gráfica de pie
+            createPieChart();
+            
+            // Gráficas de API Servers con datos corregidos
+            createLineChart('api1', [
+                { 
+                    label: 'CPU', 
+                    data: testData.api1.cpu, 
+                    borderColor: colors.cpu.border, 
+                    backgroundColor: colors.cpu.bg,
+                    fill: false
+                },
+                { 
+                    label: 'Memoria', 
+                    data: testData.api1.memory, 
+                    borderColor: colors.memory.border, 
+                    backgroundColor: colors.memory.bg,
+                    fill: false
+                },
+                { 
+                    label: 'Disco I/O', 
+                    data: testData.api1.diskIO, 
+                    borderColor: colors.diskIO.border, 
+                    backgroundColor: colors.diskIO.bg,
+                    fill: false
+                }
+            ]);
+            
+            createLineChart('api2', [
+                { 
+                    label: 'CPU', 
+                    data: testData.api2.cpu, 
+                    borderColor: colors.cpu.border, 
+                    backgroundColor: colors.cpu.bg,
+                    fill: false
+                },
+                { 
+                    label: 'Memoria', 
+                    data: testData.api2.memory, 
+                    borderColor: colors.memory.border, 
+                    backgroundColor: colors.memory.bg,
+                    fill: false
+                },
+                { 
+                    label: 'Disco I/O', 
+                    data: testData.api2.diskIO, 
+                    borderColor: colors.diskIO.border, 
+                    backgroundColor: colors.diskIO.bg,
+                    fill: false
+                }
+            ]);
+            
+            // Gráfica de SQL Server con escala especial para I/O
+            createLineChart('sqlserver', [
+                { 
+                    label: 'CPU', 
+                    data: testData.sql.cpu, 
+                    borderColor: colors.cpu.border, 
+                    backgroundColor: colors.cpu.bg,
+                    fill: false
+                },
+                { 
+                    label: 'Memoria', 
+                    data: testData.sql.memory, 
+                    borderColor: colors.memory.border, 
+                    backgroundColor: colors.memory.bg,
+                    fill: false
+                },
+                { 
+                    label: 'Disco I/O', 
+                    data: testData.sql.diskIO, 
+                    borderColor: colors.diskIO.border, 
+                    backgroundColor: colors.diskIO.bg,
+                    fill: false
+                }
+            ], chartConfig.sqlChart);
+            
+            console.log('Gráficas inicializadas correctamente');
+        });
+
+        // Funciones de navegación
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // Atajo de teclado para regresar
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') goBack();
+        });
+
+        // Función para descargar PDF
+        function downloadPDF() {
+            const originalTitle = document.title;
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            // Cambiar título temporalmente
+            document.title = `Reporte_BBVA_TESTBBVA001_API_Enqueue_v2.2.1_PASS_${timestamp}`;
+            
+            // Ocultar elementos de navegación
+            const navElements = document.querySelectorAll('.nav-header, header, nav');
+            navElements.forEach(el => el.style.display = 'none');
+            
+            // Guardar estilos originales del body
+            const originalStyles = {
+                fontSize: document.body.style.fontSize,
+                background: document.body.style.background,
+                margin: document.body.style.margin,
+                padding: document.body.style.padding
+            };
+            
+            // Aplicar estilos para PDF
+            Object.assign(document.body.style, {
+                fontSize: '10px',
+                background: 'white',
+                margin: '0',
+                padding: '15px'
+            });
+            
+            // Optimizar canvas para PDF
+            const canvasElements = document.querySelectorAll('.chart-box canvas');
+            canvasElements.forEach(canvas => {
+                Object.assign(canvas.style, {
+                    maxHeight: '150px',
+                    maxWidth: '100%',
+                    width: '100%',
+                    height: 'auto'
+                });
+            });
+            
+            // Crear estilos adicionales para impresión
+            const printStyle = document.createElement('style');
+            printStyle.innerHTML = `
+                @media print {
+                    @page { margin: 0.3in; size: A4; }
+                    .nav-header, header, nav { display: none !important; }
+                    body { 
+                        -webkit-print-color-adjust: exact !important;
+                        color-adjust: exact !important;
+                    }
+                    .chart-box { 
+                        height: 180px !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .chart-box canvas {
+                        max-height: 150px !important;
+                        max-width: 100% !important;
+                        width: 100% !important;
+                        height: auto !important;
+                    }
+                    .chart-container { page-break-inside: avoid !important; }
+                }
+            `;
+            document.head.appendChild(printStyle);
+            
+            // Función para restaurar estilos
+            function restoreStyles() {
+                document.title = originalTitle;
+                Object.assign(document.body.style, originalStyles);
+                navElements.forEach(el => el.style.display = '');
+                document.head.removeChild(printStyle);
+                
+                // Restaurar canvas
+                canvasElements.forEach(canvas => {
+                    Object.assign(canvas.style, {
+                        maxHeight: '',
+                        maxWidth: '',
+                        width: '',
+                        height: ''
+                    });
+                });
+            }
+            
+            // Ejecutar impresión con delays para asegurar renderizado
+            setTimeout(() => {
+                window.print();
+                setTimeout(restoreStyles, 1500);
+            }, 300);
+        }
+    </script>
+</body>
+</html>
